@@ -1,0 +1,224 @@
+#
+# IDEA Ultimate with VNC + noVNC for browser access
+# Supports IDEA 2024 and later versions
+#
+
+FROM ubuntu:22.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV TZ=Asia/Shanghai
+ENV LANG=zh_CN.UTF-8
+ENV LANGUAGE=zh_CN:zh
+ENV LC_ALL=zh_CN.UTF-8
+
+# ============================================
+# Install dependencies
+# ============================================
+# Generate Chinese locale
+RUN apt-get update && apt-get install -y --no-install-recommends locales \
+    && sed -i '/zh_CN.UTF-8/s/^# //g' /etc/locale.gen \
+    && locale-gen zh_CN.UTF-8 \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    # Desktop environment (lightweight)
+    xfce4 xfce4-goodies dbus-x11 \
+    # VNC server
+    tigervnc-standalone-server tigervnc-common tigervnc-tools \
+    # noVNC for browser access
+    novnc websockify \
+    # Utilities
+    wget curl ca-certificates sudo \
+    git bash-completion procps \
+    # Fonts
+    fonts-wqy-zenhei fonts-wqy-microhei \
+    # Icon themes (fix missing icons)
+    adwaita-icon-theme hicolor-icon-theme \
+    tango-icon-theme gnome-icon-theme \
+    gtk-update-icon-cache librsvg2-common \
+    # For IDEA
+    libxext6 libxrender1 libxtst6 libxi6 libfreetype6 \
+    fontconfig libfontconfig1 libxslt1.1 \
+    # Clean up
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* \
+    # Update icon cache
+    && gtk-update-icon-cache -f /usr/share/icons/hicolor/ 2>/dev/null || true \
+    && gtk-update-icon-cache -f /usr/share/icons/Adwaita/ 2>/dev/null || true
+
+# ============================================
+# Download and install IDEA
+# ============================================
+ARG IDE_DOWNLOAD_URL
+ENV IDE_HOME=/opt/idea
+
+WORKDIR /tmp
+RUN wget -q "${IDE_DOWNLOAD_URL}" -O idea.tar.gz \
+    && mkdir -p ${IDE_HOME} \
+    && tar -xzf idea.tar.gz -C ${IDE_HOME} --strip-components=1 \
+    && rm idea.tar.gz \
+    && chmod +x ${IDE_HOME}/bin/*.sh
+
+# ============================================
+# Copy and configure activation (active-agt.jar)
+# Same structure as Windows activation script
+# ============================================
+ENV JETBRA_DIR=/opt/jetbra
+COPY jetbra/ ${JETBRA_DIR}/
+RUN chmod 644 ${JETBRA_DIR}/active-agt.jar \
+    && chmod -R 644 ${JETBRA_DIR}/config/* \
+    && chmod -R 644 ${JETBRA_DIR}/plugins/*
+
+# Configure vmoptions for activation (NO =jetbrains suffix!)
+RUN VMOPTIONS_FILE="${IDE_HOME}/bin/idea64.vmoptions" \
+    && echo '' >> "${VMOPTIONS_FILE}" \
+    && echo '--add-opens=java.base/jdk.internal.org.objectweb.asm=ALL-UNNAMED' >> "${VMOPTIONS_FILE}" \
+    && echo '--add-opens=java.base/jdk.internal.org.objectweb.asm.tree=ALL-UNNAMED' >> "${VMOPTIONS_FILE}" \
+    && echo "-javaagent:${JETBRA_DIR}/active-agt.jar" >> "${VMOPTIONS_FILE}"
+
+# ============================================
+# Create user
+# ============================================
+ENV USER_NAME=developer
+ENV USER_HOME=/home/${USER_NAME}
+
+RUN useradd -m -s /bin/bash -G sudo ${USER_NAME} \
+    && echo "${USER_NAME} ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers \
+    && mkdir -p ${USER_HOME}/.vnc ${USER_HOME}/Desktop \
+    && chown -R ${USER_NAME}:${USER_NAME} ${USER_HOME}
+
+# Pre-create JetBrains config directory structure
+RUN mkdir -p ${USER_HOME}/.config/JetBrains/IntelliJIdea2024.3 \
+    && chown -R ${USER_NAME}:${USER_NAME} ${USER_HOME}/.config
+
+# ============================================
+# Configure VNC
+# ============================================
+# VNC password (default: idea)
+ARG VNC_PASSWORD=idea123
+RUN printf "${VNC_PASSWORD}\n${VNC_PASSWORD}\nn\n" | vncpasswd ${USER_HOME}/.vnc/passwd \
+    && chmod 600 ${USER_HOME}/.vnc/passwd \
+    && chown -R ${USER_NAME}:${USER_NAME} ${USER_HOME}/.vnc
+
+# VNC startup script
+RUN echo '#!/bin/bash\n\
+unset SESSION_MANAGER\n\
+unset DBUS_SESSION_BUS_ADDRESS\n\
+export XKL_XMODMAP_DISABLE=1\n\
+exec startxfce4\n\
+' > ${USER_HOME}/.vnc/xstartup \
+    && chmod +x ${USER_HOME}/.vnc/xstartup \
+    && chown ${USER_NAME}:${USER_NAME} ${USER_HOME}/.vnc/xstartup
+
+# Install zenity and xclip for activation script
+RUN apt-get update && apt-get install -y --no-install-recommends zenity xclip \
+    && rm -rf /var/lib/apt/lists/*
+
+# Configure XFCE to use Adwaita icon theme
+RUN mkdir -p ${USER_HOME}/.config/xfce4/xfconf/xfce-perchannel-xml \
+    && printf '%s\n' \
+    '<?xml version="1.0" encoding="UTF-8"?>' \
+    '<channel name="xsettings" version="1.0">' \
+    '  <property name="Net" type="empty">' \
+    '    <property name="IconThemeName" type="string" value="Adwaita"/>' \
+    '    <property name="ThemeName" type="string" value="Adwaita"/>' \
+    '  </property>' \
+    '  <property name="Gtk" type="empty">' \
+    '    <property name="IconSizes" type="string" value=""/>' \
+    '  </property>' \
+    '</channel>' \
+    > ${USER_HOME}/.config/xfce4/xfconf/xfce-perchannel-xml/xsettings.xml \
+    && chown -R ${USER_NAME}:${USER_NAME} ${USER_HOME}/.config
+
+# Create desktop shortcut for IDEA
+RUN printf '%s\n' \
+    '[Desktop Entry]' \
+    'Version=1.0' \
+    'Type=Application' \
+    'Name=IntelliJ IDEA' \
+    'Icon=/opt/idea/bin/idea.png' \
+    'Exec=/opt/idea/bin/idea.sh' \
+    'Terminal=false' \
+    'Categories=Development;IDE;' \
+    > ${USER_HOME}/Desktop/idea.desktop \
+    && chmod +x ${USER_HOME}/Desktop/idea.desktop \
+    && chown ${USER_NAME}:${USER_NAME} ${USER_HOME}/Desktop/idea.desktop
+
+# Copy all activation keys (each IDE needs its own key!)
+COPY jetbra/*.key /opt/jetbra/
+
+COPY scripts/activate.sh /opt/scripts/activate.sh
+COPY scripts/install-ide.sh /opt/scripts/install-ide.sh
+RUN chmod +x /opt/scripts/*.sh && sed -i 's/\r$//' /opt/scripts/*.sh
+
+# Create desktop entry for activation
+RUN printf '%s\n' \
+    '[Desktop Entry]' \
+    'Version=1.0' \
+    'Type=Application' \
+    'Name=Activate IDE' \
+    'Icon=application-x-executable' \
+    'Exec=/opt/scripts/activate.sh' \
+    'Terminal=true' \
+    > ${USER_HOME}/Desktop/activate.desktop \
+    && chmod +x ${USER_HOME}/Desktop/activate.desktop \
+    && chown ${USER_NAME}:${USER_NAME} ${USER_HOME}/Desktop/activate.desktop
+
+# Create desktop entry for IDE installer
+RUN printf '%s\n' \
+    '[Desktop Entry]' \
+    'Version=1.0' \
+    'Type=Application' \
+    'Name=Install Other IDE' \
+    'Icon=system-software-install' \
+    'Exec=/opt/scripts/install-ide.sh' \
+    'Terminal=true' \
+    > ${USER_HOME}/Desktop/install-ide.desktop \
+    && chmod +x ${USER_HOME}/Desktop/install-ide.desktop \
+    && chown ${USER_NAME}:${USER_NAME} ${USER_HOME}/Desktop/install-ide.desktop
+
+# ============================================
+# Startup script
+# ============================================
+RUN echo '#!/bin/bash\n\
+set -e\n\
+\n\
+# Start VNC server\n\
+USER_HOME=/home/developer\n\
+export HOME=${USER_HOME}\n\
+export USER=developer\n\
+\n\
+# Clean up old VNC locks\n\
+rm -rf /tmp/.X* /tmp/.x* ${USER_HOME}/.vnc/*.pid ${USER_HOME}/.vnc/*.log 2>/dev/null || true\n\
+\n\
+# Start VNC server as developer user\n\
+su - developer -c "vncserver :1 -geometry 1920x1080 -depth 24 -localhost no"\n\
+\n\
+# Start noVNC\n\
+websockify --web=/usr/share/novnc/ 6080 localhost:5901 &\n\
+\n\
+echo ""\n\
+echo "============================================"\n\
+echo "  IDEA VNC Server Started!"\n\
+echo "============================================"\n\
+echo "  Browser Access: http://localhost:6080/vnc.html"\n\
+echo "  VNC Password: ${VNC_PASSWORD:-idea}"\n\
+echo "============================================"\n\
+echo ""\n\
+\n\
+# Keep container running\n\
+tail -f /dev/null\n\
+' > /startup.sh \
+    && chmod +x /startup.sh \
+    && sed -i 's/\r$//' /startup.sh
+
+# ============================================
+# Environment
+# ============================================
+ENV DISPLAY=:1
+EXPOSE 5901 6080
+
+USER root
+WORKDIR ${USER_HOME}
+
+CMD ["/startup.sh"]

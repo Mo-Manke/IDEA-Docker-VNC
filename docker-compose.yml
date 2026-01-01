@@ -1,0 +1,24 @@
+services:
+  idea-vnc:
+    build:
+      context: .
+      dockerfile: Dockerfile.vnc
+      args:
+        IDE_DOWNLOAD_URL: ${IDE_DOWNLOAD_URL:-https://download.jetbrains.com/idea/ideaIU-2024.3.1.1.tar.gz}
+        VNC_PASSWORD: ${VNC_PASSWORD:-idea123}
+    container_name: idea-vnc
+    ports:
+      # noVNC 网页访问端口
+      - "${NOVNC_PORT:-6080}:6080"
+      # VNC 直连端口 (可选)
+      - "${VNC_PORT:-5901}:5901"
+    volumes:
+      # 持久化用户数据（项目、IDE设置等）
+      - idea-data:/home/developer
+    environment:
+      - TZ=Asia/Shanghai
+    restart: unless-stopped
+    shm_size: '2gb'
+
+volumes:
+  idea-data:
