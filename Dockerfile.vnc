@@ -100,19 +100,55 @@ RUN printf "${VNC_PASSWORD}\n${VNC_PASSWORD}\nn\n" | vncpasswd ${USER_HOME}/.vnc
     && chmod 600 ${USER_HOME}/.vnc/passwd \
     && chown -R ${USER_NAME}:${USER_NAME} ${USER_HOME}/.vnc
 
-# VNC startup script
+# VNC startup script with fcitx5 input method
 RUN echo '#!/bin/bash\n\
 unset SESSION_MANAGER\n\
 unset DBUS_SESSION_BUS_ADDRESS\n\
 export XKL_XMODMAP_DISABLE=1\n\
+# Chinese input method\n\
+export GTK_IM_MODULE=fcitx\n\
+export QT_IM_MODULE=fcitx\n\
+export XMODIFIERS=@im=fcitx\n\
+export INPUT_METHOD=fcitx\n\
+fcitx5 -d &\n\
+# Check default password on first login\n\
+/opt/scripts/check-password.sh &\n\
 exec startxfce4\n\
 ' > ${USER_HOME}/.vnc/xstartup \
     && chmod +x ${USER_HOME}/.vnc/xstartup \
     && chown ${USER_NAME}:${USER_NAME} ${USER_HOME}/.vnc/xstartup
 
-# Install zenity and xclip for activation script
-RUN apt-get update && apt-get install -y --no-install-recommends zenity xclip \
+# Install zenity, xclip, and Chinese input method (fcitx5)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    zenity xclip \
+    # Chinese input method
+    fcitx5 fcitx5-chinese-addons fcitx5-frontend-gtk3 fcitx5-config-qt \
+    im-config dbus-x11 \
+    # XFCE Chinese localization
+    language-pack-zh-hans \
     && rm -rf /var/lib/apt/lists/*
+
+# Configure fcitx5 with Pinyin input method
+RUN mkdir -p ${USER_HOME}/.config/fcitx5/conf \
+    && mkdir -p ${USER_HOME}/.config/fcitx5/profile \
+    && printf '%s\n' \
+    '[Groups/0]' \
+    'Name=Default' \
+    'Default Layout=us' \
+    'DefaultIM=pinyin' \
+    '' \
+    '[Groups/0/Items/0]' \
+    'Name=keyboard-us' \
+    'Layout=' \
+    '' \
+    '[Groups/0/Items/1]' \
+    'Name=pinyin' \
+    'Layout=' \
+    '' \
+    '[GroupOrder]' \
+    '0=Default' \
+    > ${USER_HOME}/.config/fcitx5/profile/default \
+    && chown -R ${USER_NAME}:${USER_NAME} ${USER_HOME}/.config/fcitx5
 
 # Configure XFCE to use Adwaita icon theme
 RUN mkdir -p ${USER_HOME}/.config/xfce4/xfconf/xfce-perchannel-xml \
@@ -149,6 +185,7 @@ COPY jetbra/*.key /opt/jetbra/
 
 COPY scripts/activate.sh /opt/scripts/activate.sh
 COPY scripts/install-ide.sh /opt/scripts/install-ide.sh
+COPY scripts/check-password.sh /opt/scripts/check-password.sh
 RUN chmod +x /opt/scripts/*.sh && sed -i 's/\r$//' /opt/scripts/*.sh
 
 # Create desktop entry for activation
