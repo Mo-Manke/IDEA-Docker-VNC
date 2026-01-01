@@ -14,10 +14,11 @@ ENV LC_ALL=zh_CN.UTF-8
 # ============================================
 # Install dependencies
 # ============================================
-# Generate Chinese locale
+# Generate Simplified Chinese locale
 RUN apt-get update && apt-get install -y --no-install-recommends locales \
     && sed -i '/zh_CN.UTF-8/s/^# //g' /etc/locale.gen \
     && locale-gen zh_CN.UTF-8 \
+    && update-locale LANG=zh_CN.UTF-8 LC_ALL=zh_CN.UTF-8 \
     && rm -rf /var/lib/apt/lists/*
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -87,9 +88,13 @@ RUN useradd -m -s /bin/bash -G sudo ${USER_NAME} \
     && mkdir -p ${USER_HOME}/.vnc ${USER_HOME}/Desktop \
     && chown -R ${USER_NAME}:${USER_NAME} ${USER_HOME}
 
-# Pre-create JetBrains config directory structure
+# Pre-create JetBrains config and data directory structure
 RUN mkdir -p ${USER_HOME}/.config/JetBrains/IntelliJIdea2024.3 \
-    && chown -R ${USER_NAME}:${USER_NAME} ${USER_HOME}/.config
+    && mkdir -p ${USER_HOME}/.local/share/JetBrains \
+    && mkdir -p ${USER_HOME}/.cache/JetBrains \
+    && chown -R ${USER_NAME}:${USER_NAME} ${USER_HOME}/.config \
+    && chown -R ${USER_NAME}:${USER_NAME} ${USER_HOME}/.local \
+    && chown -R ${USER_NAME}:${USER_NAME} ${USER_HOME}/.cache
 
 # ============================================
 # Configure VNC
@@ -100,55 +105,47 @@ RUN printf "${VNC_PASSWORD}\n${VNC_PASSWORD}\nn\n" | vncpasswd ${USER_HOME}/.vnc
     && chmod 600 ${USER_HOME}/.vnc/passwd \
     && chown -R ${USER_NAME}:${USER_NAME} ${USER_HOME}/.vnc
 
-# VNC startup script with fcitx5 input method
+# VNC startup script with ibus input method
 RUN echo '#!/bin/bash\n\
 unset SESSION_MANAGER\n\
 unset DBUS_SESSION_BUS_ADDRESS\n\
 export XKL_XMODMAP_DISABLE=1\n\
-# Chinese input method\n\
-export GTK_IM_MODULE=fcitx\n\
-export QT_IM_MODULE=fcitx\n\
-export XMODIFIERS=@im=fcitx\n\
-export INPUT_METHOD=fcitx\n\
-fcitx5 -d &\n\
-# Check default password on first login\n\
-/opt/scripts/check-password.sh &\n\
+# Simplified Chinese locale\n\
+export LANG=zh_CN.UTF-8\n\
+export LANGUAGE=zh_CN:zh\n\
+export LC_ALL=zh_CN.UTF-8\n\
+# Chinese input method environment (ibus)\n\
+export GTK_IM_MODULE=ibus\n\
+export QT_IM_MODULE=ibus\n\
+export XMODIFIERS=@im=ibus\n\
+# Start dbus session\n\
+eval $(dbus-launch --sh-syntax --exit-with-session)\n\
+export DBUS_SESSION_BUS_ADDRESS\n\
+# Start ibus daemon\n\
+ibus-daemon -drx &\n\
+# Check default password on first login (background)\n\
+(sleep 5 && /opt/scripts/check-password.sh) &\n\
 exec startxfce4\n\
 ' > ${USER_HOME}/.vnc/xstartup \
     && chmod +x ${USER_HOME}/.vnc/xstartup \
     && chown ${USER_NAME}:${USER_NAME} ${USER_HOME}/.vnc/xstartup
 
-# Install zenity, xclip, and Chinese input method (fcitx5)
+# Install zenity, xclip, and Chinese input method (ibus - more stable)
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    zenity xclip \
-    # Chinese input method
-    fcitx5 fcitx5-chinese-addons fcitx5-frontend-gtk3 fcitx5-config-qt \
-    im-config dbus-x11 \
-    # XFCE Chinese localization
-    language-pack-zh-hans \
-    && rm -rf /var/lib/apt/lists/*
+    zenity xclip x11-utils \
+    # Chinese input method - ibus is more stable in VNC
+    ibus ibus-pinyin ibus-libpinyin ibus-gtk3 \
+    dbus-x11 \
+    # Simplified Chinese localization (NOT Traditional)
+    language-pack-zh-hans language-pack-gnome-zh-hans \
+    && rm -rf /var/lib/apt/lists/* \
+    # Set default language to Simplified Chinese
+    && update-locale LANG=zh_CN.UTF-8 LANGUAGE=zh_CN:zh LC_ALL=zh_CN.UTF-8
 
-# Configure fcitx5 with Pinyin input method
-RUN mkdir -p ${USER_HOME}/.config/fcitx5/conf \
-    && mkdir -p ${USER_HOME}/.config/fcitx5/profile \
-    && printf '%s\n' \
-    '[Groups/0]' \
-    'Name=Default' \
-    'Default Layout=us' \
-    'DefaultIM=pinyin' \
-    '' \
-    '[Groups/0/Items/0]' \
-    'Name=keyboard-us' \
-    'Layout=' \
-    '' \
-    '[Groups/0/Items/1]' \
-    'Name=pinyin' \
-    'Layout=' \
-    '' \
-    '[GroupOrder]' \
-    '0=Default' \
-    > ${USER_HOME}/.config/fcitx5/profile/default \
-    && chown -R ${USER_NAME}:${USER_NAME} ${USER_HOME}/.config/fcitx5
+# Configure ibus with Pinyin input method
+RUN mkdir -p ${USER_HOME}/.config/ibus/bus \
+    && dbus-uuidgen > /var/lib/dbus/machine-id 2>/dev/null || true \
+    && chown -R ${USER_NAME}:${USER_NAME} ${USER_HOME}/.config/ibus
 
 # Configure XFCE to use Adwaita icon theme
 RUN mkdir -p ${USER_HOME}/.config/xfce4/xfconf/xfce-perchannel-xml \
@@ -213,6 +210,21 @@ RUN printf '%s\n' \
     > ${USER_HOME}/Desktop/install-ide.desktop \
     && chmod +x ${USER_HOME}/Desktop/install-ide.desktop \
     && chown ${USER_NAME}:${USER_NAME} ${USER_HOME}/Desktop/install-ide.desktop
+
+# Create desktop entry for IBus input method settings
+RUN printf '%s\n' \
+    '[Desktop Entry]' \
+    'Version=1.0' \
+    'Type=Application' \
+    'Name=Input Method (IBus)' \
+    'Comment=Configure Chinese Input Method' \
+    'Icon=ibus-setup' \
+    'Exec=ibus-setup' \
+    'Terminal=false' \
+    'Categories=Settings;' \
+    > ${USER_HOME}/Desktop/ibus-setup.desktop \
+    && chmod +x ${USER_HOME}/Desktop/ibus-setup.desktop \
+    && chown ${USER_NAME}:${USER_NAME} ${USER_HOME}/Desktop/ibus-setup.desktop
 
 # ============================================
 # Startup script

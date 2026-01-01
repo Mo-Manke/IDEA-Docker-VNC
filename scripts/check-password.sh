@@ -11,9 +11,20 @@ if [ -f "$MARKER_FILE" ]; then
 fi
 
 export DISPLAY=:1
+export LANG=zh_CN.UTF-8
+export LANGUAGE=zh_CN:zh
+export LC_ALL=zh_CN.UTF-8
 
-# Wait for desktop to be ready
-sleep 3
+# Wait for desktop to be fully ready
+sleep 8
+
+# Wait for zenity to be available
+for i in {1..10}; do
+    if command -v zenity &> /dev/null && xdpyinfo &> /dev/null; then
+        break
+    fi
+    sleep 1
+done
 
 # Show prompt dialog
 RESPONSE=$(zenity --question \
