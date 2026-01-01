@@ -1,0 +1,916 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>✨ IDEA VNC - 选择工作区 ✨</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Quicksand', -apple-system, sans-serif;
+            background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 30%, #fff9c4 60%, #ffecb3 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        /* Character decorations */
+        .character {
+            position: fixed;
+            z-index: 0;
+            pointer-events: none;
+            font-size: 100px;
+            filter: drop-shadow(0 10px 20px rgba(0,0,0,0.2));
+        }
+        
+        .klee {
+            bottom: -20px;
+            left: 5%;
+            animation: klee-bounce 3s ease-in-out infinite;
+        }
+        
+        .nahida {
+            bottom: -20px;
+            right: 5%;
+            animation: nahida-float 4s ease-in-out infinite;
+        }
+        
+        @keyframes klee-bounce {
+            0%, 100% { transform: translateY(0) rotate(-5deg); }
+            50% { transform: translateY(-30px) rotate(5deg); }
+        }
+        
+        @keyframes nahida-float {
+            0%, 100% { transform: translateY(0) rotate(3deg); }
+            50% { transform: translateY(-20px) rotate(-3deg); }
+        }
+        
+        /* Floating elements */
+        .stars {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: 0;
+        }
+        
+        .star {
+            position: absolute;
+            font-size: 24px;
+            animation: float 6s ease-in-out infinite;
+            opacity: 0.7;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotate(0deg); opacity: 0.7; }
+            50% { transform: translateY(-25px) rotate(180deg); opacity: 1; }
+        }
+        
+        /* Dendro particles */
+        .particle-dendro {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            background: radial-gradient(circle, #a5d6a7 0%, #66bb6a 100%);
+            border-radius: 50%;
+            animation: dendro-rise 8s ease-in-out infinite;
+            opacity: 0.6;
+        }
+        
+        @keyframes dendro-rise {
+            0% { transform: translateY(100vh) scale(0); opacity: 0; }
+            50% { opacity: 0.8; }
+            100% { transform: translateY(-100vh) scale(1); opacity: 0; }
+        }
+        
+        /* Pyro particles */
+        .particle-pyro {
+            position: fixed;
+            width: 8px;
+            height: 8px;
+            background: radial-gradient(circle, #ffcc80 0%, #ff7043 100%);
+            border-radius: 50%;
+            animation: pyro-float 6s ease-in-out infinite;
+            opacity: 0.7;
+        }
+        
+        @keyframes pyro-float {
+            0%, 100% { transform: translateY(0) scale(1); opacity: 0.7; }
+            50% { transform: translateY(-50px) scale(1.5); opacity: 1; }
+        }
+        
+        .container {
+            background: rgba(255, 255, 255, 0.92);
+            border-radius: 30px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(102, 187, 106, 0.3);
+            text-align: center;
+            max-width: 520px;
+            width: 90%;
+            position: relative;
+            z-index: 1;
+            border: 3px solid rgba(165, 214, 167, 0.6);
+            backdrop-filter: blur(10px);
+        }
+        
+        .mascot {
+            font-size: 50px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+        
+        .mascot span {
+            animation: bounce 2s ease-in-out infinite;
+        }
+        
+        .mascot span:nth-child(2) {
+            animation-delay: 0.5s;
+        }
+        
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        h1 {
+            background: linear-gradient(135deg, #ff7043 0%, #66bb6a 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 5px;
+            font-size: 28px;
+            font-weight: 700;
+        }
+        
+        .subtitle {
+            color: #81c784;
+            margin-bottom: 25px;
+            font-size: 14px;
+        }
+        
+        .user-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        
+        .loading-users, .no-users {
+            padding: 30px;
+            color: #81c784;
+            font-size: 14px;
+        }
+        
+        .user-card-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .user-card {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            padding: 18px;
+            border: 2px solid #c8e6c9;
+            border-radius: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            color: inherit;
+            background: linear-gradient(135deg, #fff 0%, #e8f5e9 100%);
+        }
+        
+        .user-card:hover {
+            border-color: #81c784;
+            background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 10px 30px rgba(102, 187, 106, 0.3);
+        }
+        
+        .user-card.pyro {
+            border-color: #ffcc80;
+            background: linear-gradient(135deg, #fff 0%, #fff3e0 100%);
+        }
+        
+        .user-card.pyro:hover {
+            border-color: #ff7043;
+            background: linear-gradient(135deg, #fff3e0 0%, #ffcc80 100%);
+            box-shadow: 0 10px 30px rgba(255, 112, 67, 0.3);
+        }
+        
+        .user-card.dendro {
+            border-color: #a5d6a7;
+            background: linear-gradient(135deg, #fff 0%, #e8f5e9 100%);
+        }
+        
+        .user-card.dendro:hover {
+            border-color: #66bb6a;
+            background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+            box-shadow: 0 10px 30px rgba(102, 187, 106, 0.3);
+        }
+        
+        .user-card.dendro .user-avatar {
+            background: linear-gradient(135deg, #a5d6a7 0%, #66bb6a 100%);
+            box-shadow: 0 4px 15px rgba(102, 187, 106, 0.3);
+        }
+        
+        .user-card.dendro .user-name {
+            color: #2e7d32;
+        }
+        
+        .user-card.electro {
+            border-color: #ce93d8;
+            background: linear-gradient(135deg, #fff 0%, #f3e5f5 100%);
+        }
+        .user-card.electro:hover {
+            border-color: #9c27b0;
+            background: linear-gradient(135deg, #f3e5f5 0%, #e1bee7 100%);
+            box-shadow: 0 10px 30px rgba(156, 39, 176, 0.3);
+        }
+        
+        .user-card.cryo {
+            border-color: #81d4fa;
+            background: linear-gradient(135deg, #fff 0%, #e1f5fe 100%);
+        }
+        .user-card.cryo:hover {
+            border-color: #4fc3f7;
+            background: linear-gradient(135deg, #e1f5fe 0%, #b3e5fc 100%);
+            box-shadow: 0 10px 30px rgba(79, 195, 247, 0.3);
+        }
+        
+        .user-card.geo {
+            border-color: #ffe082;
+            background: linear-gradient(135deg, #fff 0%, #fff8e1 100%);
+        }
+        .user-card.geo:hover {
+            border-color: #ffc107;
+            background: linear-gradient(135deg, #fff8e1 0%, #ffecb3 100%);
+            box-shadow: 0 10px 30px rgba(255, 193, 7, 0.3);
+        }
+        
+        .user-card.anemo {
+            border-color: #80deea;
+            background: linear-gradient(135deg, #fff 0%, #e0f7fa 100%);
+        }
+        .user-card.anemo:hover {
+            border-color: #4dd0e1;
+            background: linear-gradient(135deg, #e0f7fa 0%, #b2ebf2 100%);
+            box-shadow: 0 10px 30px rgba(77, 208, 225, 0.3);
+        }
+        
+        .user-card.hydro {
+            border-color: #90caf9;
+            background: linear-gradient(135deg, #fff 0%, #e3f2fd 100%);
+        }
+        .user-card.hydro:hover {
+            border-color: #42a5f5;
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+            box-shadow: 0 10px 30px rgba(66, 165, 245, 0.3);
+        }
+        
+        .user-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #a5d6a7 0%, #66bb6a 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 22px;
+            margin-right: 15px;
+            box-shadow: 0 4px 15px rgba(102, 187, 106, 0.3);
+        }
+        
+        .user-card.pyro .user-avatar {
+            background: linear-gradient(135deg, #ffcc80 0%, #ff7043 100%);
+            box-shadow: 0 4px 15px rgba(255, 112, 67, 0.3);
+        }
+        
+        .user-info {
+            text-align: left;
+            flex: 1;
+        }
+        
+        .user-name {
+            font-size: 17px;
+            font-weight: 600;
+            color: #2e7d32;
+        }
+        
+        .user-card.pyro .user-name {
+            color: #e65100;
+        }
+        
+        .user-status {
+            font-size: 12px;
+            color: #81c784;
+            margin-top: 3px;
+        }
+        
+        .arrow {
+            color: #81c784;
+            font-size: 20px;
+            transition: transform 0.3s;
+        }
+        
+        .user-card:hover .arrow {
+            transform: translateX(5px);
+        }
+        
+        .delete-btn {
+            background: linear-gradient(135deg, #ffcdd2 0%, #ef9a9a 100%);
+            border: none;
+            border-radius: 12px;
+            width: 45px;
+            height: 45px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+        
+        .delete-btn:hover {
+            background: linear-gradient(135deg, #ef5350 0%, #e53935 100%);
+            transform: scale(1.1);
+            box-shadow: 0 5px 15px rgba(229, 57, 53, 0.4);
+        }
+        
+        /* Management buttons */
+        .management {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .btn-add {
+            background: linear-gradient(135deg, #a5d6a7 0%, #66bb6a 100%);
+            color: white;
+        }
+        
+        .btn-add:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 20px rgba(102, 187, 106, 0.4);
+        }
+        
+        .btn-refresh {
+            background: linear-gradient(135deg, #90caf9 0%, #42a5f5 100%);
+            color: white;
+        }
+        
+        .btn-refresh:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 20px rgba(66, 165, 245, 0.4);
+        }
+        
+        .footer {
+            margin-top: 25px;
+            color: #81c784;
+            font-size: 12px;
+        }
+        
+        .footer a {
+            color: #66bb6a;
+            text-decoration: none;
+        }
+        
+        .loading {
+            display: none;
+            color: #81c784;
+            padding: 20px;
+        }
+        
+        .loading.active {
+            display: block;
+        }
+        
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 100;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal.active {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+        }
+        
+        .modal-content h2 {
+            color: #e91e63;
+            margin-bottom: 20px;
+            font-size: 20px;
+        }
+        
+        .modal-content input, .modal-content select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #c8e6c9;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            font-family: inherit;
+            font-size: 14px;
+        }
+        
+        .modal-content input:focus, .modal-content select:focus {
+            outline: none;
+            border-color: #66bb6a;
+        }
+        
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+        
+        .btn-cancel {
+            background: #eee;
+            color: #666;
+        }
+        
+        .btn-confirm {
+            background: linear-gradient(135deg, #a5d6a7 0%, #66bb6a 100%);
+            color: white;
+        }
+        
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #333;
+            color: white;
+            padding: 15px 30px;
+            border-radius: 30px;
+            z-index: 200;
+            display: none;
+            animation: toast-in 0.3s ease;
+        }
+        
+        .toast.active { display: block; }
+        .toast.success { background: linear-gradient(135deg, #66bb6a 0%, #43a047 100%); }
+        .toast.error { background: linear-gradient(135deg, #ef5350 0%, #e53935 100%); }
+        
+        @keyframes toast-in {
+            from { opacity: 0; transform: translateX(-50%) translateY(20px); }
+            to { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Klee (left) -->
+    <div class="character klee" title="可莉">
+        <img src="https://upload-static.hoyoverse.com/hoyolab-wiki/2023/12/05/12672785/a83b84d9dba37c7ade3f8d5aaeda3b2a_2372674260893584494.png" 
+             alt="可莉" style="height: 180px; width: auto;" 
+             onerror="this.parentElement.innerHTML='🔥'">
+    </div>
+    
+    <!-- Nahida (right) -->
+    <div class="character nahida" title="纳西妲">
+        <img src="https://upload-static.hoyoverse.com/hoyolab-wiki/2023/12/05/12672785/7e1a1ec4f9c7a80766dc92b6c3ac7aab_3618954256389498197.png" 
+             alt="纳西妲" style="height: 180px; width: auto;"
+             onerror="this.parentElement.innerHTML='🌿'">
+    </div>
+
+    <!-- Floating decorations -->
+    <div class="stars">
+        <span class="star" style="top: 10%; left: 15%; animation-delay: 0s;">🍀</span>
+        <span class="star" style="top: 20%; left: 75%; animation-delay: 1s;">🔥</span>
+        <span class="star" style="top: 55%; left: 12%; animation-delay: 2s;">🌱</span>
+        <span class="star" style="top: 65%; left: 88%; animation-delay: 0.5s;">💥</span>
+        <span class="star" style="top: 35%; left: 8%; animation-delay: 1.5s;">🌿</span>
+        <span class="star" style="top: 80%; left: 45%; animation-delay: 2.5s;">✨</span>
+        <span class="star" style="top: 12%; left: 50%; animation-delay: 3s;">🍃</span>
+        <span class="star" style="top: 45%; left: 92%; animation-delay: 0.8s;">💫</span>
+    </div>
+    
+    <!-- Dendro particles -->
+    <div class="particle-dendro" style="left: 20%; animation-delay: 0s;"></div>
+    <div class="particle-dendro" style="left: 40%; animation-delay: 2s;"></div>
+    <div class="particle-dendro" style="left: 60%; animation-delay: 4s;"></div>
+    <div class="particle-dendro" style="left: 80%; animation-delay: 6s;"></div>
+    
+    <!-- Pyro particles -->
+    <div class="particle-pyro" style="left: 10%; bottom: 20%; animation-delay: 0s;"></div>
+    <div class="particle-pyro" style="left: 15%; bottom: 15%; animation-delay: 1s;"></div>
+    <div class="particle-pyro" style="left: 8%; bottom: 25%; animation-delay: 2s;"></div>
+
+    <div class="container">
+        <div class="mascot">
+            <span title="可莉">🔥</span>
+            <span title="纳西妲">🌿</span>
+        </div>
+        <h1>IDEA 云工作区</h1>
+        <p class="subtitle">~ 欢迎来到提瓦特的代码世界 ~</p>
+        
+        <div class="loading" id="loading">加载中...</div>
+        
+        <div class="user-list" id="userList">
+            <div class="loading-users">加载中...</div>
+        </div>
+        
+        <div class="management">
+            <button class="btn btn-add" onclick="showAddModal()">
+                <span>➕</span> 新增工作区
+            </button>
+            <button class="btn btn-refresh" onclick="loadUsers()">
+                <span>🔄</span> 刷新
+            </button>
+        </div>
+        
+        <div class="footer">
+            <p>📁 项目目录共享 · 🖥️ 独立桌面操作</p>
+            <p style="margin-top: 8px;">Made with 💖 in Teyvat</p>
+        </div>
+    </div>
+
+    <!-- Admin Setup Modal (First Time) -->
+    <div class="modal" id="adminSetupModal">
+        <div class="modal-content">
+            <h2>🔐 设置管理员密码</h2>
+            <p style="margin-bottom: 15px; color: #666; font-size: 13px;">首次使用，请设置管理员密码以保护工作区管理功能</p>
+            <input type="password" id="adminPassword1" placeholder="输入管理员密码（至少6位）">
+            <input type="password" id="adminPassword2" placeholder="确认管理员密码">
+            
+            <div class="modal-buttons" style="margin-top: 20px;">
+                <button class="btn btn-confirm" onclick="setupAdmin()">✨ 确认设置</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add User Modal -->
+    <div class="modal" id="addModal">
+        <div class="modal-content">
+            <h2>🌟 召唤新工作区</h2>
+            <input type="password" id="adminPasswordAdd" placeholder="管理员密码">
+            <input type="text" id="newUserId" placeholder="工作区ID（如：user3）">
+            <input type="password" id="newUserPassword" placeholder="设置连接密码（至少4位）">
+            
+            <div class="modal-buttons" style="margin-top: 20px;">
+                <button class="btn btn-cancel" onclick="closeModal('addModal')">取消</button>
+                <button class="btn btn-confirm" onclick="addUser()">✨ 创建</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete User Modal -->
+    <div class="modal" id="deleteModal">
+        <div class="modal-content">
+            <h2>🗑️ 删除工作区</h2>
+            <p style="margin-bottom: 15px; color: #666;">确定要删除这个工作区吗？</p>
+            <input type="hidden" id="deleteUserId">
+            <input type="password" id="adminPasswordDel" placeholder="管理员密码">
+            
+            <div class="modal-buttons" style="margin-top: 20px;">
+                <button class="btn btn-cancel" onclick="closeModal('deleteModal')">取消</button>
+                <button class="btn btn-confirm" style="background: linear-gradient(135deg, #ef5350 0%, #e53935 100%);" onclick="deleteUser()">确认删除</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Command Modal (when API not available) -->
+    <div class="modal" id="commandModal">
+        <div class="modal-content" style="max-width: 550px;">
+            <h2>📝 手动执行命令</h2>
+            <p style="margin-bottom: 15px; color: #666; font-size: 13px;">API 服务未启用，请在服务器上执行以下命令：</p>
+            <div style="background: #1e1e1e; color: #d4d4d4; padding: 15px; border-radius: 10px; text-align: left; font-family: monospace; font-size: 12px; white-space: pre-wrap; word-break: break-all; max-height: 200px; overflow-y: auto;" id="commandText"></div>
+            <div class="modal-buttons" style="margin-top: 20px;">
+                <button class="btn btn-cancel" onclick="closeModal('commandModal')">关闭</button>
+                <button class="btn btn-confirm" onclick="copyCommand()">📋 复制命令</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
+    <script>
+        const ADMIN_KEY = 'idea_vnc_admin_hash';
+        const USERS_KEY = 'idea_vnc_users';
+        
+        // 原神角色数据
+        const GENSHIN_CHARS = [
+            { name: '可莉', emoji: '🔥', element: 'pyro', status: '哒哒哒~ ✨', color: '#ff7043' },
+            { name: '纳西妲', emoji: '🌿', element: 'dendro', status: '世界树的智慧 ✨', color: '#66bb6a' },
+            { name: '雷电将军', emoji: '⚡', element: 'electro', status: '永恒的统治 ⚡', color: '#9c27b0' },
+            { name: '神里绫华', emoji: '❄️', element: 'cryo', status: '白鹭霜华 ❄️', color: '#4fc3f7' },
+            { name: '钟离', emoji: '🪨', element: 'geo', status: '岩王帝君 🏔️', color: '#ffc107' },
+            { name: '温迪', emoji: '🌪️', element: 'anemo', status: '风神巴巴托斯 🍃', color: '#4dd0e1' },
+            { name: '达达利亚', emoji: '💧', element: 'hydro', status: '至冬国公子 🌊', color: '#42a5f5' },
+            { name: '胡桃', emoji: '🔥', element: 'pyro', status: '往生堂堂主 🦋', color: '#ff5722' },
+            { name: '甘雨', emoji: '❄️', element: 'cryo', status: '璃月仙麟 ✨', color: '#81d4fa' },
+            { name: '八重神子', emoji: '⚡', element: 'electro', status: '狐狸大人 🦊', color: '#ce93d8' },
+            { name: '夜兰', emoji: '💧', element: 'hydro', status: '隐秘之人 🎭', color: '#1e88e5' },
+            { name: '艾尔海森', emoji: '🌿', element: 'dendro', status: '书记官 📚', color: '#43a047' },
+        ];
+        
+        function showToast(msg, type = '') {
+            const toast = document.getElementById('toast');
+            toast.textContent = msg;
+            toast.className = 'toast active ' + type;
+            setTimeout(() => toast.classList.remove('active'), 3000);
+        }
+        
+        function simpleHash(str) {
+            let hash = 0;
+            for (let i = 0; i < str.length; i++) {
+                const char = str.charCodeAt(i);
+                hash = ((hash << 5) - hash) + char;
+                hash = hash & hash;
+            }
+            return hash.toString();
+        }
+        
+        function getCharForUser(userId) {
+            // 使用用户ID生成固定的角色索引
+            let hash = 0;
+            for (let i = 0; i < userId.length; i++) {
+                hash = ((hash << 5) - hash) + userId.charCodeAt(i);
+            }
+            return GENSHIN_CHARS[Math.abs(hash) % GENSHIN_CHARS.length];
+        }
+        
+        function getStoredUsers() {
+            const stored = localStorage.getItem(USERS_KEY);
+            if (stored) {
+                return JSON.parse(stored);
+            }
+            // 默认用户
+            return ['user1', 'user2'];
+        }
+        
+        function saveUsers(users) {
+            localStorage.setItem(USERS_KEY, JSON.stringify(users));
+        }
+        
+        function renderUserList(users) {
+            const container = document.getElementById('userList');
+            if (users.length === 0) {
+                container.innerHTML = '<div class="no-users">暂无工作区，点击新增创建 ✨</div>';
+                return;
+            }
+            
+            container.innerHTML = users.map(userId => {
+                const char = getCharForUser(userId);
+                return `
+                <div class="user-card-wrapper">
+                    <a href="/${userId}/vnc.html?path=${userId}/websockify" class="user-card ${char.element}">
+                        <div class="user-avatar" style="background: linear-gradient(135deg, ${char.color}88 0%, ${char.color} 100%);">${char.emoji}</div>
+                        <div class="user-info">
+                            <div class="user-name" style="color: ${char.color};">${char.name}的工作区</div>
+                            <div class="user-status">${char.status}</div>
+                        </div>
+                        <div class="arrow">→</div>
+                    </a>
+                    <button class="delete-btn" onclick="event.preventDefault(); showDeleteModal('${userId}')" title="删除">🗑️</button>
+                </div>`;
+            }).join('');
+        }
+        
+        function checkAdminSetup() {
+            if (!localStorage.getItem(ADMIN_KEY)) {
+                document.getElementById('adminSetupModal').classList.add('active');
+            }
+        }
+        
+        function setupAdmin() {
+            const p1 = document.getElementById('adminPassword1').value;
+            const p2 = document.getElementById('adminPassword2').value;
+            
+            if (p1.length < 6) {
+                showToast('密码至少需要6位 🔐', 'error');
+                return;
+            }
+            if (p1 !== p2) {
+                showToast('两次密码不一致 😿', 'error');
+                return;
+            }
+            
+            localStorage.setItem(ADMIN_KEY, simpleHash(p1));
+            closeModal('adminSetupModal');
+            showToast('管理员密码设置成功 ✨', 'success');
+        }
+        
+        function verifyAdmin(password) {
+            const stored = localStorage.getItem(ADMIN_KEY);
+            return stored === simpleHash(password);
+        }
+        
+        function showAddModal() {
+            if (!localStorage.getItem(ADMIN_KEY)) {
+                checkAdminSetup();
+                return;
+            }
+            document.getElementById('addModal').classList.add('active');
+        }
+        
+        function showDeleteModal(userId) {
+            if (!localStorage.getItem(ADMIN_KEY)) {
+                checkAdminSetup();
+                return;
+            }
+            document.getElementById('deleteUserId').value = userId;
+            document.getElementById('deleteModal').classList.add('active');
+        }
+        
+        function showCommandModal(command) {
+            document.getElementById('commandText').textContent = command;
+            document.getElementById('commandModal').classList.add('active');
+        }
+        
+        function copyCommand() {
+            const cmd = document.getElementById('commandText').textContent;
+            navigator.clipboard.writeText(cmd).then(() => {
+                showToast('命令已复制 📋', 'success');
+            });
+        }
+        
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('active');
+        }
+        
+        async function loadUsers() {
+            const users = getStoredUsers();
+            renderUserList(users);
+            showToast('工作区列表已刷新 🌸', 'success');
+        }
+        
+        async function addUser() {
+            const adminPwd = document.getElementById('adminPasswordAdd').value;
+            const userId = document.getElementById('newUserId').value.trim();
+            const password = document.getElementById('newUserPassword').value;
+            
+            if (!verifyAdmin(adminPwd)) {
+                showToast('管理员密码错误 🔐', 'error');
+                return;
+            }
+            if (!userId) {
+                showToast('请输入工作区ID 😿', 'error');
+                return;
+            }
+            if (!/^[a-zA-Z0-9_-]+$/.test(userId)) {
+                showToast('ID只能包含字母数字和下划线 😿', 'error');
+                return;
+            }
+            if (password.length < 4) {
+                showToast('连接密码至少需要4位 🔐', 'error');
+                return;
+            }
+            
+            const users = getStoredUsers();
+            if (users.includes(userId)) {
+                showToast('该工作区ID已存在 😿', 'error');
+                return;
+            }
+            
+            try {
+                const res = await fetch('/api/users', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: userId, password, adminPassword: adminPwd })
+                });
+                const data = await res.json();
+                
+                if (res.ok) {
+                    users.push(userId);
+                    saveUsers(users);
+                    showToast('工作区创建成功！ ✨', 'success');
+                    closeModal('addModal');
+                    renderUserList(users);
+                    // 清空输入
+                    document.getElementById('newUserId').value = '';
+                    document.getElementById('newUserPassword').value = '';
+                    document.getElementById('adminPasswordAdd').value = '';
+                } else {
+                    showToast(data.error || '创建失败', 'error');
+                }
+            } catch (e) {
+                // API不可用，但仍然添加到本地列表并显示命令
+                users.push(userId);
+                saveUsers(users);
+                renderUserList(users);
+                closeModal('addModal');
+                const cmd = `# 创建工作区 ${userId}
+docker run -d \\
+  --name idea-${userId} \\
+  --hostname idea-${userId} \\
+  -e TZ=Asia/Shanghai \\
+  -v idea-docker-vnc_shared-projects:/home/developer/projects \\
+  -v idea-config-${userId}:/home/developer/.config \\
+  -v idea-cache-${userId}:/home/developer/.cache \\
+  -v idea-local-${userId}:/home/developer/.local \\
+  --shm-size 2gb \\
+  --network idea-docker-vnc_default \\
+  --restart unless-stopped \\
+  idea-docker-vnc-idea-user1`;
+                showCommandModal(cmd);
+            }
+        }
+        
+        async function deleteUser() {
+            const userId = document.getElementById('deleteUserId').value;
+            const adminPwd = document.getElementById('adminPasswordDel').value;
+            
+            if (!verifyAdmin(adminPwd)) {
+                showToast('管理员密码错误 🔐', 'error');
+                return;
+            }
+            
+            try {
+                const res = await fetch('/api/users/' + userId, {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password: adminPwd })
+                });
+                const data = await res.json();
+                
+                if (res.ok) {
+                    let users = getStoredUsers();
+                    users = users.filter(u => u !== userId);
+                    saveUsers(users);
+                    showToast('工作区已删除 👋', 'success');
+                    closeModal('deleteModal');
+                    renderUserList(users);
+                } else {
+                    showToast(data.error || '删除失败', 'error');
+                }
+            } catch (e) {
+                // API不可用，但仍然从本地列表移除并显示命令
+                let users = getStoredUsers();
+                users = users.filter(u => u !== userId);
+                saveUsers(users);
+                renderUserList(users);
+                closeModal('deleteModal');
+                const cmd = `# 删除工作区 ${userId}
+docker stop idea-${userId}
+docker rm idea-${userId}`;
+                showCommandModal(cmd);
+            }
+        }
+        
+        // Close modal on outside click
+        document.querySelectorAll('.modal').forEach(modal => {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal && modal.id !== 'adminSetupModal') {
+                    modal.classList.remove('active');
+                }
+            });
+        });
+        
+        // Initialize on page load
+        window.onload = function() {
+            checkAdminSetup();
+            renderUserList(getStoredUsers());
+        };
+    </script>
+</body>
+</html>

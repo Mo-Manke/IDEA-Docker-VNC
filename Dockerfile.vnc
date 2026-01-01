@@ -92,9 +92,12 @@ RUN useradd -m -s /bin/bash -G sudo ${USER_NAME} \
 RUN mkdir -p ${USER_HOME}/.config/JetBrains/IntelliJIdea2024.3 \
     && mkdir -p ${USER_HOME}/.local/share/JetBrains \
     && mkdir -p ${USER_HOME}/.cache/JetBrains \
+    # Create shared projects directory (will be mounted as volume)
+    && mkdir -p ${USER_HOME}/projects \
     && chown -R ${USER_NAME}:${USER_NAME} ${USER_HOME}/.config \
     && chown -R ${USER_NAME}:${USER_NAME} ${USER_HOME}/.local \
-    && chown -R ${USER_NAME}:${USER_NAME} ${USER_HOME}/.cache
+    && chown -R ${USER_NAME}:${USER_NAME} ${USER_HOME}/.cache \
+    && chown -R ${USER_NAME}:${USER_NAME} ${USER_HOME}/projects
 
 # ============================================
 # Configure VNC

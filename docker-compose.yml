@@ -1,24 +1,98 @@
+# ============================================
+# 多用户协同配置
+# 独立桌面操作 + 共享项目数据
+# 统一入口：http://your-domain/
+# ============================================
+
 services:
-  idea-vnc:
+  # 网关 - 统一入口，用户选择界面
+  gateway:
+    image: nginx:alpine
+    container_name: idea-gateway
+    ports:
+      - "6080:80"
+    volumes:
+      - ./gateway/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./gateway/index.html:/usr/share/nginx/html/index.html:ro
+    depends_on:
+      idea-user1:
+        condition: service_started
+      idea-user2:
+        condition: service_started
+      api:
+        condition: service_started
+    restart: unless-stopped
+
+  # API 服务 - 用户管理
+  api:
+    build:
+      context: ./gateway
+      dockerfile: Dockerfile
+    container_name: idea-api
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - API_PORT=8080
+    restart: unless-stopped
+
+  # 用户1
+  idea-user1:
     build:
       context: .
       dockerfile: Dockerfile.vnc
       args:
         IDE_DOWNLOAD_URL: ${IDE_DOWNLOAD_URL:-https://download.jetbrains.com/idea/ideaIU-2024.3.1.1.tar.gz}
         VNC_PASSWORD: ${VNC_PASSWORD:-idea123}
-    container_name: idea-vnc
-    ports:
-      # noVNC 网页访问端口
-      - "${NOVNC_PORT:-6080}:6080"
-      # VNC 直连端口 (可选)
-      - "${VNC_PORT:-5901}:5901"
+    container_name: idea-user1
+    hostname: idea-user1
+    expose:
+      - "6080"   # noVNC (内部访问)
+      - "5901"   # VNC
     volumes:
-      # 持久化用户数据（项目、IDE设置等）
-      - idea-data:/home/developer
+      # 共享项目目录（所有用户共用）
+      - shared-projects:/home/developer/projects
+      # 独立的IDE配置（避免冲突）
+      - idea-config-user1:/home/developer/.config
+      - idea-cache-user1:/home/developer/.cache
+      - idea-local-user1:/home/developer/.local
+    environment:
+      - TZ=Asia/Shanghai
+    restart: unless-stopped
+    shm_size: '2gb'
+
+  # 用户2
+  idea-user2:
+    build:
+      context: .
+      dockerfile: Dockerfile.vnc
+      args:
+        IDE_DOWNLOAD_URL: ${IDE_DOWNLOAD_URL:-https://download.jetbrains.com/idea/ideaIU-2024.3.1.1.tar.gz}
+        VNC_PASSWORD: ${VNC_PASSWORD:-idea123}
+    container_name: idea-user2
+    hostname: idea-user2
+    expose:
+      - "6080"   # noVNC (内部访问)
+      - "5901"   # VNC
+    volumes:
+      # 共享项目目录（所有用户共用）
+      - shared-projects:/home/developer/projects
+      # 独立的IDE配置（避免冲突）
+      - idea-config-user2:/home/developer/.config
+      - idea-cache-user2:/home/developer/.cache
+      - idea-local-user2:/home/developer/.local
     environment:
       - TZ=Asia/Shanghai
     restart: unless-stopped
     shm_size: '2gb'
 
 volumes:
-  idea-data:
+  # 共享的项目数据
+  shared-projects:
+  # 用户1独立配置
+  idea-config-user1:
+  idea-cache-user1:
+  idea-local-user1:
+  # 用户2独立配置
+  idea-config-user2:
+  idea-cache-user2:
+  idea-local-user2:
