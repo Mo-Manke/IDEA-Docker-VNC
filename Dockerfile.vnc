@@ -254,7 +254,7 @@ echo "============================================"\n\
 echo "  IDEA VNC Server Started!"\n\
 echo "============================================"\n\
 echo "  Browser Access: http://localhost:6080/vnc.html"\n\
-echo "  VNC Password: ${VNC_PASSWORD:-idea}"\n\
+echo "  VNC Password: ${VNC_PASSWORD:-idea123}"\n\
 echo "============================================"\n\
 echo ""\n\
 \n\
