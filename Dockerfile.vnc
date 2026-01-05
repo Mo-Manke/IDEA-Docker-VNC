@@ -279,17 +279,18 @@ if [ -d /sys/kernel/security ] && ! grep -qs "/sys/kernel/security " /proc/mount
 fi\n\
 \
 APPARMOR_ENABLED=$(cat /sys/module/apparmor/parameters/enabled 2>/dev/null || echo N)\n\
-if [ "${APPARMOR_ENABLED}" != "Y" ] && [ "${APPARMOR_ENABLED}" != "y" ]; then\n\
-  if [ -d /home/developer/.config/JetBrains ]; then\n\
-    for JB_DIR in /home/developer/.config/JetBrains/*; do\n\
-      if [ -d "${JB_DIR}" ]; then\n\
-        CUSTOM_PROPS="${JB_DIR}/idea.properties"\n\
-        touch "${CUSTOM_PROPS}"\n\
-        grep -qxF "ide.browser.jcef.sandbox.enable=false" "${CUSTOM_PROPS}" 2>/dev/null || echo "ide.browser.jcef.sandbox.enable=false" >> "${CUSTOM_PROPS}"\n\
-        chown developer:developer "${CUSTOM_PROPS}" || true\n\
-      fi\n\
-    done\n\
-  fi\n\
+if [ "${JCEF_SANDBOX_ENABLE:-0}" != "1" ]; then\n\
+  mkdir -p /home/developer/.config/JetBrains/IntelliJIdea2024.3\n\
+  chown -R developer:developer /home/developer/.config/JetBrains 2>/dev/null || true\n\
+  for JB_DIR in /home/developer/.config/JetBrains/*; do\n\
+    if [ -d "${JB_DIR}" ]; then\n\
+      CUSTOM_PROPS="${JB_DIR}/idea.properties"\n\
+      touch "${CUSTOM_PROPS}"\n\
+      sed -i '\''/^ide\.browser\.jcef\.sandbox\.enable=/d'\'' "${CUSTOM_PROPS}" 2>/dev/null || true\n\
+      echo "ide.browser.jcef.sandbox.enable=false" >> "${CUSTOM_PROPS}"\n\
+      chown developer:developer "${CUSTOM_PROPS}" || true\n\
+    fi\n\
+  done\n\
 fi\n\
 \
 # Start VNC server\n\
@@ -299,7 +300,7 @@ export USER=developer\n\
 \
 # Clean up old VNC locks\n\
 rm -rf /tmp/.X* /tmp/.x* ${USER_HOME}/.vnc/*.pid ${USER_HOME}/.vnc/*.log 2>/dev/null || true\n\
-\n\
+\
 # Start VNC server as developer user\n\
 su - developer -c "vncserver :1 -geometry 1920x1080 -depth 24 -localhost no"\n\
 \n\
