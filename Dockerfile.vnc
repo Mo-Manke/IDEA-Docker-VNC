@@ -11,6 +11,11 @@ ENV LANG=zh_CN.UTF-8
 ENV LANGUAGE=zh_CN:zh
 ENV LC_ALL=zh_CN.UTF-8
 
+RUN sed -i \
+    -e 's|http://archive.ubuntu.com/ubuntu/|http://mirrors.tuna.tsinghua.edu.cn/ubuntu/|g' \
+    -e 's|http://security.ubuntu.com/ubuntu/|http://mirrors.tuna.tsinghua.edu.cn/ubuntu/|g' \
+    /etc/apt/sources.list
+
 # ============================================
 # Install dependencies
 # ============================================
@@ -28,9 +33,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     tigervnc-standalone-server tigervnc-common tigervnc-tools \
     # noVNC for browser access
     novnc websockify \
+    apparmor apparmor-utils \
     # Utilities
     wget curl ca-certificates sudo \
     git bash-completion procps \
+    xdg-utils bzip2 gnupg \
+    libnss3 libgbm1 libasound2 libxss1 libu2f-udev \
     # Fonts
     fonts-wqy-zenhei fonts-wqy-microhei \
     # Icon themes (fix missing icons)
@@ -46,6 +54,24 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     # Update icon cache
     && gtk-update-icon-cache -f /usr/share/icons/hicolor/ 2>/dev/null || true \
     && gtk-update-icon-cache -f /usr/share/icons/Adwaita/ 2>/dev/null || true
+
+RUN apt-get update \
+    && install -d -m 0755 /etc/apt/keyrings \
+    && wget -qO- https://packages.mozilla.org/apt/repo-signing-key.gpg \
+        | gpg --dearmor -o /etc/apt/keyrings/packages.mozilla.org.gpg \
+    && echo "deb [signed-by=/etc/apt/keyrings/packages.mozilla.org.gpg] https://packages.mozilla.org/apt mozilla main" \
+        > /etc/apt/sources.list.d/mozilla.list \
+    && printf '%s\n' \
+        'Package: *' \
+        'Pin: origin packages.mozilla.org' \
+        'Pin-Priority: 1000' \
+        > /etc/apt/preferences.d/mozilla \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends firefox \
+    && update-alternatives --install /usr/bin/x-www-browser x-www-browser /usr/bin/firefox 100 \
+    && update-alternatives --set x-www-browser /usr/bin/firefox \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
 # ============================================
 # Download and install IDEA
@@ -180,6 +206,19 @@ RUN printf '%s\n' \
     && chmod +x ${USER_HOME}/Desktop/idea.desktop \
     && chown ${USER_NAME}:${USER_NAME} ${USER_HOME}/Desktop/idea.desktop
 
+RUN printf '%s\n' \
+    '[Desktop Entry]' \
+    'Version=1.0' \
+    'Type=Application' \
+    'Name=Firefox' \
+    'Icon=firefox' \
+    'Exec=/usr/bin/firefox' \
+    'Terminal=false' \
+    'Categories=Network;WebBrowser;' \
+    > ${USER_HOME}/Desktop/firefox.desktop \
+    && chmod +x ${USER_HOME}/Desktop/firefox.desktop \
+    && chown ${USER_NAME}:${USER_NAME} ${USER_HOME}/Desktop/firefox.desktop
+
 # Copy all activation keys (each IDE needs its own key!)
 COPY jetbra/*.key /opt/jetbra/
 
@@ -234,12 +273,25 @@ RUN printf '%s\n' \
 # ============================================
 RUN echo '#!/bin/bash\n\
 set -e\n\
-\n\
+\
+if [ -d /sys/kernel/security ] && ! grep -qs "/sys/kernel/security " /proc/mounts; then\n\
+  mount -t securityfs securityfs /sys/kernel/security 2>/dev/null || true\n\
+fi\n\
+\
+APPARMOR_ENABLED=$(cat /sys/module/apparmor/parameters/enabled 2>/dev/null || echo N)\n\
+if [ "${APPARMOR_ENABLED}" != "Y" ] && [ "${APPARMOR_ENABLED}" != "y" ]; then\n\
+  CUSTOM_PROPS=/home/developer/.config/JetBrains/IntelliJIdea2024.3/idea.properties\n\
+  mkdir -p "$(dirname "${CUSTOM_PROPS}")"\n\
+  touch "${CUSTOM_PROPS}"\n\
+  grep -qxF "ide.browser.jcef.sandbox.enable=false" "${CUSTOM_PROPS}" 2>/dev/null || echo "ide.browser.jcef.sandbox.enable=false" >> "${CUSTOM_PROPS}"\n\
+  chown developer:developer "${CUSTOM_PROPS}" || true\n\
+fi\n\
+\
 # Start VNC server\n\
 USER_HOME=/home/developer\n\
 export HOME=${USER_HOME}\n\
 export USER=developer\n\
-\n\
+\
 # Clean up old VNC locks\n\
 rm -rf /tmp/.X* /tmp/.x* ${USER_HOME}/.vnc/*.pid ${USER_HOME}/.vnc/*.log 2>/dev/null || true\n\
 \n\

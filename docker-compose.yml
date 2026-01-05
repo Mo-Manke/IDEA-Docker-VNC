@@ -29,6 +29,11 @@ services:
         VNC_PASSWORD: ${VNC_PASSWORD:-idea123}
     container_name: idea-user1
     hostname: idea-user1
+    cap_add:
+      - MAC_ADMIN
+      - SYS_ADMIN
+    security_opt:
+      - apparmor:unconfined
     expose:
       - "6080"
       - "5901"
@@ -52,6 +57,11 @@ services:
         VNC_PASSWORD: ${VNC_PASSWORD:-idea123}
     container_name: idea-user2
     hostname: idea-user2
+    cap_add:
+      - MAC_ADMIN
+      - SYS_ADMIN
+    security_opt:
+      - apparmor:unconfined
     expose:
       - "6080"
       - "5901"
