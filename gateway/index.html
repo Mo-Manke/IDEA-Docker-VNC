@@ -6,13 +6,13 @@
     <title>✨ IDEA VNC - 选择工作区 ✨</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap');
-        
+
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
-        
+
         body {
             font-family: 'Quicksand', -apple-system, sans-serif;
             background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 30%, #fff9c4 60%, #ffecb3 100%);
@@ -23,7 +23,7 @@
             position: relative;
             overflow: hidden;
         }
-        
+
         /* Character decorations */
         .character {
             position: fixed;
@@ -32,29 +32,29 @@
             font-size: 100px;
             filter: drop-shadow(0 10px 20px rgba(0,0,0,0.2));
         }
-        
+
         .klee {
             bottom: -20px;
             left: 5%;
             animation: klee-bounce 3s ease-in-out infinite;
         }
-        
+
         .nahida {
             bottom: -20px;
             right: 5%;
             animation: nahida-float 4s ease-in-out infinite;
         }
-        
+
         @keyframes klee-bounce {
             0%, 100% { transform: translateY(0) rotate(-5deg); }
             50% { transform: translateY(-30px) rotate(5deg); }
         }
-        
+
         @keyframes nahida-float {
             0%, 100% { transform: translateY(0) rotate(3deg); }
             50% { transform: translateY(-20px) rotate(-3deg); }
         }
-        
+
         /* Floating elements */
         .stars {
             position: fixed;
@@ -66,19 +66,19 @@
             overflow: hidden;
             z-index: 0;
         }
-        
+
         .star {
             position: absolute;
             font-size: 24px;
             animation: float 6s ease-in-out infinite;
             opacity: 0.7;
         }
-        
+
         @keyframes float {
             0%, 100% { transform: translateY(0) rotate(0deg); opacity: 0.7; }
             50% { transform: translateY(-25px) rotate(180deg); opacity: 1; }
         }
-        
+
         /* Dendro particles */
         .particle-dendro {
             position: fixed;
@@ -89,13 +89,13 @@
             animation: dendro-rise 8s ease-in-out infinite;
             opacity: 0.6;
         }
-        
+
         @keyframes dendro-rise {
             0% { transform: translateY(100vh) scale(0); opacity: 0; }
             50% { opacity: 0.8; }
             100% { transform: translateY(-100vh) scale(1); opacity: 0; }
         }
-        
+
         /* Pyro particles */
         .particle-pyro {
             position: fixed;
@@ -106,12 +106,12 @@
             animation: pyro-float 6s ease-in-out infinite;
             opacity: 0.7;
         }
-        
+
         @keyframes pyro-float {
             0%, 100% { transform: translateY(0) scale(1); opacity: 0.7; }
             50% { transform: translateY(-50px) scale(1.5); opacity: 1; }
         }
-        
+
         .container {
             background: rgba(255, 255, 255, 0.92);
             border-radius: 30px;
@@ -125,7 +125,7 @@
             border: 3px solid rgba(165, 214, 167, 0.6);
             backdrop-filter: blur(10px);
         }
-        
+
         .mascot {
             font-size: 50px;
             margin-bottom: 10px;
@@ -133,20 +133,20 @@
             justify-content: center;
             gap: 15px;
         }
-        
+
         .mascot span {
             animation: bounce 2s ease-in-out infinite;
         }
-        
+
         .mascot span:nth-child(2) {
             animation-delay: 0.5s;
         }
-        
+
         @keyframes bounce {
             0%, 100% { transform: translateY(0); }
             50% { transform: translateY(-10px); }
         }
-        
+
         h1 {
             background: linear-gradient(135deg, #ff7043 0%, #66bb6a 100%);
             -webkit-background-clip: text;
@@ -156,25 +156,25 @@
             font-size: 28px;
             font-weight: 700;
         }
-        
+
         .subtitle {
             color: #81c784;
             margin-bottom: 25px;
             font-size: 14px;
         }
-        
+
         .user-list {
             display: flex;
             flex-direction: column;
             gap: 12px;
             margin-bottom: 20px;
         }
-        
+
         .user-card-wrapper {
             display: flex;
             align-items: center;
         }
-        
+
         .user-card {
             flex: 1;
             display: flex;
@@ -188,45 +188,45 @@
             color: inherit;
             background: linear-gradient(135deg, #fff 0%, #e8f5e9 100%);
         }
-        
+
         .user-card:hover {
             border-color: #81c784;
             background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
             transform: translateY(-3px) scale(1.02);
             box-shadow: 0 10px 30px rgba(102, 187, 106, 0.3);
         }
-        
+
         .user-card.pyro {
             border-color: #ffcc80;
             background: linear-gradient(135deg, #fff 0%, #fff3e0 100%);
         }
-        
+
         .user-card.pyro:hover {
             border-color: #ff7043;
             background: linear-gradient(135deg, #fff3e0 0%, #ffcc80 100%);
             box-shadow: 0 10px 30px rgba(255, 112, 67, 0.3);
         }
-        
+
         .user-card.dendro {
             border-color: #a5d6a7;
             background: linear-gradient(135deg, #fff 0%, #e8f5e9 100%);
         }
-        
+
         .user-card.dendro:hover {
             border-color: #66bb6a;
             background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
             box-shadow: 0 10px 30px rgba(102, 187, 106, 0.3);
         }
-        
+
         .user-card.dendro .user-avatar {
             background: linear-gradient(135deg, #a5d6a7 0%, #66bb6a 100%);
             box-shadow: 0 4px 15px rgba(102, 187, 106, 0.3);
         }
-        
+
         .user-card.dendro .user-name {
             color: #2e7d32;
         }
-        
+
         .user-avatar {
             width: 50px;
             height: 50px;
@@ -240,149 +240,133 @@
             margin-right: 15px;
             box-shadow: 0 4px 15px rgba(102, 187, 106, 0.3);
         }
-        
+
         .user-card.pyro .user-avatar {
             background: linear-gradient(135deg, #ffcc80 0%, #ff7043 100%);
             box-shadow: 0 4px 15px rgba(255, 112, 67, 0.3);
         }
-        
+
         .user-info {
             text-align: left;
             flex: 1;
         }
-        
+
         .user-name {
             font-size: 17px;
             font-weight: 600;
             color: #2e7d32;
         }
-        
+
         .user-card.pyro .user-name {
             color: #e65100;
         }
-        
+
         .user-status {
             font-size: 12px;
             color: #81c784;
             margin-top: 3px;
         }
-        
+
         .arrow {
             color: #81c784;
             font-size: 20px;
             transition: transform 0.3s;
         }
-        
+
         .user-card:hover .arrow {
             transform: translateX(5px);
         }
-        
-        
+
+
         .footer {
             margin-top: 25px;
             color: #81c784;
             font-size: 12px;
         }
-        
+
         .footer a {
             color: #66bb6a;
             text-decoration: none;
         }
-        
+
     </style>
 </head>
 <body>
-    <!-- Klee (left) -->
-    <div class="character klee" title="可莉">
-        <img src="https://upload-static.hoyoverse.com/hoyolab-wiki/2023/12/05/12672785/a83b84d9dba37c7ade3f8d5aaeda3b2a_2372674260893584494.png" 
-             alt="可莉" style="height: 180px; width: auto;" 
-             onerror="this.parentElement.innerHTML='🔥'">
-    </div>
-    
-    <!-- Nahida (right) -->
-    <div class="character nahida" title="纳西妲">
-        <img src="https://upload-static.hoyoverse.com/hoyolab-wiki/2023/12/05/12672785/7e1a1ec4f9c7a80766dc92b6c3ac7aab_3618954256389498197.png" 
-             alt="纳西妲" style="height: 180px; width: auto;"
-             onerror="this.parentElement.innerHTML='🌿'">
-    </div>
+<!-- Klee (left) -->
+<div class="character klee" title="可莉">
+    <img src="https://upload-static.hoyoverse.com/hoyolab-wiki/2023/12/05/12672785/a83b84d9dba37c7ade3f8d5aaeda3b2a_2372674260893584494.png"
+         alt="可莉" style="height: 180px; width: auto;"
+         onerror="this.parentElement.innerHTML='🔥'">
+</div>
 
-    <!-- Floating decorations -->
-    <div class="stars">
-        <span class="star" style="top: 10%; left: 15%; animation-delay: 0s;">🍀</span>
-        <span class="star" style="top: 20%; left: 75%; animation-delay: 1s;">🔥</span>
-        <span class="star" style="top: 55%; left: 12%; animation-delay: 2s;">🌱</span>
-        <span class="star" style="top: 65%; left: 88%; animation-delay: 0.5s;">💥</span>
-        <span class="star" style="top: 35%; left: 8%; animation-delay: 1.5s;">🌿</span>
-        <span class="star" style="top: 80%; left: 45%; animation-delay: 2.5s;">✨</span>
-        <span class="star" style="top: 12%; left: 50%; animation-delay: 3s;">🍃</span>
-        <span class="star" style="top: 45%; left: 92%; animation-delay: 0.8s;">💫</span>
-    </div>
-    
-    <!-- Dendro particles -->
-    <div class="particle-dendro" style="left: 20%; animation-delay: 0s;"></div>
-    <div class="particle-dendro" style="left: 40%; animation-delay: 2s;"></div>
-    <div class="particle-dendro" style="left: 60%; animation-delay: 4s;"></div>
-    <div class="particle-dendro" style="left: 80%; animation-delay: 6s;"></div>
-    
-    <!-- Pyro particles -->
-    <div class="particle-pyro" style="left: 10%; bottom: 20%; animation-delay: 0s;"></div>
-    <div class="particle-pyro" style="left: 15%; bottom: 15%; animation-delay: 1s;"></div>
-    <div class="particle-pyro" style="left: 8%; bottom: 25%; animation-delay: 2s;"></div>
+<!-- Nahida (right) -->
+<div class="character nahida" title="纳西妲">
+    <img src="https://upload-static.hoyoverse.com/hoyolab-wiki/2023/12/05/12672785/7e1a1ec4f9c7a80766dc92b6c3ac7aab_3618954256389498197.png"
+         alt="纳西妲" style="height: 180px; width: auto;"
+         onerror="this.parentElement.innerHTML='🌿'">
+</div>
 
-    <div class="container">
-        <div class="mascot">
-            <span title="可莉">🔥</span>
-            <span title="纳西妲">🌿</span>
+<!-- Floating decorations -->
+<div class="stars">
+    <span class="star" style="top: 10%; left: 15%; animation-delay: 0s;">🍀</span>
+    <span class="star" style="top: 20%; left: 75%; animation-delay: 1s;">🔥</span>
+    <span class="star" style="top: 55%; left: 12%; animation-delay: 2s;">🌱</span>
+    <span class="star" style="top: 65%; left: 88%; animation-delay: 0.5s;">💥</span>
+    <span class="star" style="top: 35%; left: 8%; animation-delay: 1.5s;">🌿</span>
+    <span class="star" style="top: 80%; left: 45%; animation-delay: 2.5s;">✨</span>
+    <span class="star" style="top: 12%; left: 50%; animation-delay: 3s;">🍃</span>
+    <span class="star" style="top: 45%; left: 92%; animation-delay: 0.8s;">💫</span>
+</div>
+
+<!-- Dendro particles -->
+<div class="particle-dendro" style="left: 20%; animation-delay: 0s;"></div>
+<div class="particle-dendro" style="left: 40%; animation-delay: 2s;"></div>
+<div class="particle-dendro" style="left: 60%; animation-delay: 4s;"></div>
+<div class="particle-dendro" style="left: 80%; animation-delay: 6s;"></div>
+
+<!-- Pyro particles -->
+<div class="particle-pyro" style="left: 10%; bottom: 20%; animation-delay: 0s;"></div>
+<div class="particle-pyro" style="left: 15%; bottom: 15%; animation-delay: 1s;"></div>
+<div class="particle-pyro" style="left: 8%; bottom: 25%; animation-delay: 2s;"></div>
+
+<div class="container">
+    <div class="mascot">
+        <span title="可莉">🔥</span>
+        <span title="纳西妲">🌿</span>
+    </div>
+    <h1>IDEA 云工作区</h1>
+    <p class="subtitle">~ 欢迎来到提瓦特的代码世界 ~</p>
+
+    <div class="user-list">
+        <!-- 可莉的工作区 -->
+        <div class="user-card-wrapper">
+            <a href="/user1/vnc.html?path=user1/websockify" class="user-card pyro">
+                <div class="user-avatar" style="background: linear-gradient(135deg, #ffcc80 0%, #ff7043 100%);">🔥</div>
+                <div class="user-info">
+                    <div class="user-name" style="color: #ff7043;">可莉的工作区</div>
+                    <div class="user-status">哒哒哒~ ✨</div>
+                </div>
+                <div class="arrow">→</div>
+            </a>
         </div>
-        <h1>IDEA 云工作区</h1>
-        <p class="subtitle">~ 欢迎来到提瓦特的代码世界 ~</p>
-        
-        <div class="user-list">
-            <!-- 可莉的工作区 -->
-            <div class="user-card-wrapper">
-                <a id="workspace-user1" href="#" class="user-card pyro">
-                    <div class="user-avatar" style="background: linear-gradient(135deg, #ffcc80 0%, #ff7043 100%);">🔥</div>
-                    <div class="user-info">
-                        <div class="user-name" style="color: #ff7043;">可莉的工作区</div>
-                        <div class="user-status">哒哒哒~ ✨</div>
-                    </div>
-                    <div class="arrow">→</div>
-                </a>
-            </div>
-            
-            <!-- 纳西妲的工作区 -->
-            <div class="user-card-wrapper">
-                <a id="workspace-user2" href="#" class="user-card dendro">
-                    <div class="user-avatar" style="background: linear-gradient(135deg, #a5d6a7 0%, #66bb6a 100%);">🌿</div>
-                    <div class="user-info">
-                        <div class="user-name" style="color: #66bb6a;">小草神的工作区</div>
-                        <div class="user-status">世界树的智慧 ✨</div>
-                    </div>
-                    <div class="arrow">→</div>
-                </a>
-            </div>
-        </div>
-        
-        <div class="footer">
-            <p>📁 项目目录共享 · 🖥️ 独立桌面操作</p>
-            <p style="margin-top: 8px;">Made with 💖 in Teyvat</p>
+
+        <!-- 纳西妲的工作区 -->
+        <div class="user-card-wrapper">
+            <a href="/user2/vnc.html?path=user2/websockify" class="user-card dendro">
+                <div class="user-avatar" style="background: linear-gradient(135deg, #a5d6a7 0%, #66bb6a 100%);">🌿</div>
+                <div class="user-info">
+                    <div class="user-name" style="color: #66bb6a;">小草神的工作区</div>
+                    <div class="user-status">世界树的智慧 ✨</div>
+                </div>
+                <div class="arrow">→</div>
+            </a>
         </div>
     </div>
 
-    <script>
-        (function () {
-            const protocol = window.location.protocol;
-            const hostname = window.location.hostname;
-            const user1 = document.getElementById('workspace-user1');
-            const user2 = document.getElementById('workspace-user2');
-
-            if (user1) {
-                user1.href = `${protocol}//${hostname}:6081/vnc.html?autoconnect=1&path=websockify`;
-            }
-            if (user2) {
-                user2.href = `${protocol}//${hostname}:6082/vnc.html?autoconnect=1&path=websockify`;
-            }
-        })();
-    </script>
+    <div class="footer">
+        <p>📁 项目目录共享 · 🖥️ 独立桌面操作</p>
+        <p style="margin-top: 8px;">Made with 💖 in Teyvat</p>
+    </div>
+</div>
 </body>
 </html>
