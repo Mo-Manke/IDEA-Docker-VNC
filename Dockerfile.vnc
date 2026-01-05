@@ -280,11 +280,16 @@ fi\n\
 \
 APPARMOR_ENABLED=$(cat /sys/module/apparmor/parameters/enabled 2>/dev/null || echo N)\n\
 if [ "${APPARMOR_ENABLED}" != "Y" ] && [ "${APPARMOR_ENABLED}" != "y" ]; then\n\
-  CUSTOM_PROPS=/home/developer/.config/JetBrains/IntelliJIdea2024.3/idea.properties\n\
-  mkdir -p "$(dirname "${CUSTOM_PROPS}")"\n\
-  touch "${CUSTOM_PROPS}"\n\
-  grep -qxF "ide.browser.jcef.sandbox.enable=false" "${CUSTOM_PROPS}" 2>/dev/null || echo "ide.browser.jcef.sandbox.enable=false" >> "${CUSTOM_PROPS}"\n\
-  chown developer:developer "${CUSTOM_PROPS}" || true\n\
+  if [ -d /home/developer/.config/JetBrains ]; then\n\
+    for JB_DIR in /home/developer/.config/JetBrains/*; do\n\
+      if [ -d "${JB_DIR}" ]; then\n\
+        CUSTOM_PROPS="${JB_DIR}/idea.properties"\n\
+        touch "${CUSTOM_PROPS}"\n\
+        grep -qxF "ide.browser.jcef.sandbox.enable=false" "${CUSTOM_PROPS}" 2>/dev/null || echo "ide.browser.jcef.sandbox.enable=false" >> "${CUSTOM_PROPS}"\n\
+        chown developer:developer "${CUSTOM_PROPS}" || true\n\
+      fi\n\
+    done\n\
+  fi\n\
 fi\n\
 \
 # Start VNC server\n\
