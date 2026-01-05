@@ -28,6 +28,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     tigervnc-standalone-server tigervnc-common tigervnc-tools \
     # noVNC for browser access
     novnc websockify \
+    # Web browser (Firefox - lightweight and stable)
+    firefox firefox-locale-zh-hans \
     # Utilities
     wget curl ca-certificates sudo \
     git bash-completion procps \
@@ -75,7 +77,14 @@ RUN VMOPTIONS_FILE="${IDE_HOME}/bin/idea64.vmoptions" \
     && echo '' >> "${VMOPTIONS_FILE}" \
     && echo '--add-opens=java.base/jdk.internal.org.objectweb.asm=ALL-UNNAMED' >> "${VMOPTIONS_FILE}" \
     && echo '--add-opens=java.base/jdk.internal.org.objectweb.asm.tree=ALL-UNNAMED' >> "${VMOPTIONS_FILE}" \
-    && echo "-javaagent:${JETBRA_DIR}/active-agt.jar" >> "${VMOPTIONS_FILE}"
+    && echo "-javaagent:${JETBRA_DIR}/active-agt.jar" >> "${VMOPTIONS_FILE}" \
+    && echo '' >> "${VMOPTIONS_FILE}" \
+    && echo '# Disable embedded browser sandbox for Docker' >> "${VMOPTIONS_FILE}" \
+    && echo '-Djb.privacy.policy.text="<!--999.999-->"' >> "${VMOPTIONS_FILE}" \
+    && echo '-Djb.consents.confirmation.enabled=false' >> "${VMOPTIONS_FILE}" \
+    && echo '-Djb.embedded.browser.sandbox.disable=true' >> "${VMOPTIONS_FILE}" \
+    && echo '-Djcef.sandbox.enable=false' >> "${VMOPTIONS_FILE}" \
+    && echo '-Dide.browser.jcef.sandbox.enable=false' >> "${VMOPTIONS_FILE}"
 
 # ============================================
 # Create user
@@ -228,6 +237,22 @@ RUN printf '%s\n' \
     > ${USER_HOME}/Desktop/ibus-setup.desktop \
     && chmod +x ${USER_HOME}/Desktop/ibus-setup.desktop \
     && chown ${USER_NAME}:${USER_NAME} ${USER_HOME}/Desktop/ibus-setup.desktop
+
+# Create desktop entry for Firefox browser
+RUN printf '%s\n' \
+    '[Desktop Entry]' \
+    'Version=1.0' \
+    'Type=Application' \
+    'Name=Firefox Browser' \
+    'Name[zh_CN]=火狐浏览器' \
+    'Comment=Web Browser' \
+    'Icon=firefox' \
+    'Exec=firefox' \
+    'Terminal=false' \
+    'Categories=Network;WebBrowser;' \
+    > ${USER_HOME}/Desktop/firefox.desktop \
+    && chmod +x ${USER_HOME}/Desktop/firefox.desktop \
+    && chown ${USER_NAME}:${USER_NAME} ${USER_HOME}/Desktop/firefox.desktop
 
 # ============================================
 # Startup script

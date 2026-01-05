@@ -40,6 +40,8 @@ services:
       - idea-local-user1:/home/developer/.local
     environment:
       - TZ=Asia/Shanghai
+    security_opt:
+      - seccomp:unconfined
     restart: unless-stopped
     shm_size: '2gb'
 
@@ -64,6 +66,8 @@ services:
       - idea-local-user2:/home/developer/.local
     environment:
       - TZ=Asia/Shanghai
+    security_opt:
+      - seccomp:unconfined
     restart: unless-stopped
     shm_size: '2gb'
 
