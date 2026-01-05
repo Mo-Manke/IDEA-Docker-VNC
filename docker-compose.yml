@@ -38,6 +38,11 @@ services:
       - idea-config-user1:/home/developer/.config
       - idea-cache-user1:/home/developer/.cache
       - idea-local-user1:/home/developer/.local
+      - idea-vnc-user1:/home/developer/.vnc
+      - idea-mozilla-user1:/home/developer/.mozilla
+      - idea-desktop-user1:/home/developer/Desktop
+      - idea-home-user1:/home/developer/.idea
+      - idea-java-user1:/home/developer/.java
     environment:
       - TZ=Asia/Shanghai
     security_opt:
@@ -64,6 +69,11 @@ services:
       - idea-config-user2:/home/developer/.config
       - idea-cache-user2:/home/developer/.cache
       - idea-local-user2:/home/developer/.local
+      - idea-vnc-user2:/home/developer/.vnc
+      - idea-mozilla-user2:/home/developer/.mozilla
+      - idea-desktop-user2:/home/developer/Desktop
+      - idea-home-user2:/home/developer/.idea
+      - idea-java-user2:/home/developer/.java
     environment:
       - TZ=Asia/Shanghai
     security_opt:
@@ -76,6 +86,16 @@ volumes:
   idea-config-user1:
   idea-cache-user1:
   idea-local-user1:
+  idea-vnc-user1:
+  idea-mozilla-user1:
+  idea-desktop-user1:
+  idea-home-user1:
+  idea-java-user1:
   idea-config-user2:
   idea-cache-user2:
   idea-local-user2:
+  idea-vnc-user2:
+  idea-mozilla-user2:
+  idea-desktop-user2:
+  idea-home-user2:
+  idea-java-user2:
