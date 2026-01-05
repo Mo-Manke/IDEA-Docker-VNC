@@ -111,8 +111,10 @@ RUN mkdir -p ${USER_HOME}/.config/JetBrains/IntelliJIdea2024.3 \
 # ============================================
 # Configure VNC
 # ============================================
-# VNC password (default: idea)
+# VNC password and display configuration
 ARG VNC_PASSWORD=idea123
+ARG VNC_DISPLAY=1
+ENV VNC_DISPLAY_NUM=${VNC_DISPLAY}
 RUN printf "${VNC_PASSWORD}\n${VNC_PASSWORD}\nn\n" | vncpasswd ${USER_HOME}/.vnc/passwd \
     && chmod 600 ${USER_HOME}/.vnc/passwd \
     && chown -R ${USER_NAME}:${USER_NAME} ${USER_HOME}/.vnc
@@ -126,6 +128,10 @@ export XKL_XMODMAP_DISABLE=1\n\
 export LANG=zh_CN.UTF-8\n\
 export LANGUAGE=zh_CN:zh\n\
 export LC_ALL=zh_CN.UTF-8\n\
+# Firefox environment for VNC\n\
+export MOZ_ENABLE_WAYLAND=0\n\
+export MOZ_X11_EGL=1\n\
+export DISPLAY=:${VNC_DISPLAY_NUM}\n\
 # Chinese input method environment (ibus)\n\
 export GTK_IM_MODULE=ibus\n\
 export QT_IM_MODULE=ibus\n\
@@ -150,6 +156,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     dbus-x11 \
     # Simplified Chinese localization (NOT Traditional)
     language-pack-zh-hans language-pack-gnome-zh-hans \
+    # Fix Firefox dependencies for VNC
+    libdbus-glib-1-2 libgtk-3-0 libx11-xcb1 \
     && rm -rf /var/lib/apt/lists/* \
     # Set default language to Simplified Chinese
     && update-locale LANG=zh_CN.UTF-8 LANGUAGE=zh_CN:zh LC_ALL=zh_CN.UTF-8
@@ -247,11 +255,14 @@ RUN printf '%s\n' \
     'Name[zh_CN]=火狐浏览器' \
     'Comment=Web Browser' \
     'Icon=firefox' \
-    'Exec=firefox' \
+    'Exec=/usr/bin/firefox %u' \
     'Terminal=false' \
     'Categories=Network;WebBrowser;' \
+    'MimeType=text/html;text/xml;application/xhtml+xml;application/xml;application/rss+xml;application/rdf+xml;image/gif;image/jpeg;image/png;x-scheme-handler/http;x-scheme-handler/https;x-scheme-handler/ftp;x-scheme-handler/chrome;video/webm;application/x-xpinstall;' \
+    'StartupNotify=true' \
+    'Trusted=true' \
     > ${USER_HOME}/Desktop/firefox.desktop \
-    && chmod +x ${USER_HOME}/Desktop/firefox.desktop \
+    && chmod 755 ${USER_HOME}/Desktop/firefox.desktop \
     && chown ${USER_NAME}:${USER_NAME} ${USER_HOME}/Desktop/firefox.desktop
 
 # ============================================
@@ -268,11 +279,11 @@ export USER=developer\n\
 # Clean up old VNC locks\n\
 rm -rf /tmp/.X* /tmp/.x* ${USER_HOME}/.vnc/*.pid ${USER_HOME}/.vnc/*.log 2>/dev/null || true\n\
 \n\
-# Start VNC server as developer user\n\
-su - developer -c "vncserver :1 -geometry 1920x1080 -depth 24 -localhost no"\n\
+# Start VNC server as developer user with configurable display\n\
+su - developer -c "vncserver :${VNC_DISPLAY_NUM} -geometry 1920x1080 -depth 24 -localhost no"\n\
 \n\
 # Start noVNC\n\
-websockify --web=/usr/share/novnc/ 6080 localhost:5901 &\n\
+websockify --web=/usr/share/novnc/ 6080 localhost:590${VNC_DISPLAY_NUM} &\n\
 \n\
 echo ""\n\
 echo "============================================"\n\

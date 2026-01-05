@@ -340,7 +340,7 @@
         <div class="user-list">
             <!-- 可莉的工作区 -->
             <div class="user-card-wrapper">
-                <a href="/user1/vnc.html?path=user1/websockify" class="user-card pyro">
+                <a id="workspace-user1" href="#" class="user-card pyro">
                     <div class="user-avatar" style="background: linear-gradient(135deg, #ffcc80 0%, #ff7043 100%);">🔥</div>
                     <div class="user-info">
                         <div class="user-name" style="color: #ff7043;">可莉的工作区</div>
@@ -352,7 +352,7 @@
             
             <!-- 纳西妲的工作区 -->
             <div class="user-card-wrapper">
-                <a href="/user2/vnc.html?path=user2/websockify" class="user-card dendro">
+                <a id="workspace-user2" href="#" class="user-card dendro">
                     <div class="user-avatar" style="background: linear-gradient(135deg, #a5d6a7 0%, #66bb6a 100%);">🌿</div>
                     <div class="user-info">
                         <div class="user-name" style="color: #66bb6a;">小草神的工作区</div>
@@ -368,5 +368,21 @@
             <p style="margin-top: 8px;">Made with 💖 in Teyvat</p>
         </div>
     </div>
+
+    <script>
+        (function () {
+            const protocol = window.location.protocol;
+            const hostname = window.location.hostname;
+            const user1 = document.getElementById('workspace-user1');
+            const user2 = document.getElementById('workspace-user2');
+
+            if (user1) {
+                user1.href = `${protocol}//${hostname}:6081/vnc.html?autoconnect=1&path=websockify`;
+            }
+            if (user2) {
+                user2.href = `${protocol}//${hostname}:6082/vnc.html?autoconnect=1&path=websockify`;
+            }
+        })();
+    </script>
 </body>
 </html>
