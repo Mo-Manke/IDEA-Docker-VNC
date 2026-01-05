@@ -29,10 +29,9 @@ services:
         VNC_PASSWORD: ${VNC_PASSWORD:-idea123}
     container_name: idea-user1
     hostname: idea-user1
-    ports:
-      - "${VNC_PORT_USER1:-5901}:5901"
     expose:
       - "6080"
+      - "5901"
     volumes:
       - shared-projects:/home/developer/projects
       - idea-config-user1:/home/developer/.config
@@ -53,10 +52,9 @@ services:
         VNC_PASSWORD: ${VNC_PASSWORD:-idea123}
     container_name: idea-user2
     hostname: idea-user2
-    ports:
-      - "${VNC_PORT_USER2:-5902}:5901"
     expose:
       - "6080"
+      - "5901"
     volumes:
       - shared-projects:/home/developer/projects
       - idea-config-user2:/home/developer/.config
