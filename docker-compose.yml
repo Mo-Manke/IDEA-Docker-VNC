@@ -27,6 +27,7 @@ services:
       args:
         IDE_DOWNLOAD_URL: ${IDE_DOWNLOAD_URL:-https://download.jetbrains.com/idea/ideaIU-2024.3.1.1.tar.gz}
         VNC_PASSWORD: ${VNC_PASSWORD:-idea123}
+        VNC_DISPLAY: 1
     container_name: idea-user1
     hostname: idea-user1
     ports:
@@ -58,10 +59,11 @@ services:
       args:
         IDE_DOWNLOAD_URL: ${IDE_DOWNLOAD_URL:-https://download.jetbrains.com/idea/ideaIU-2024.3.1.1.tar.gz}
         VNC_PASSWORD: ${VNC_PASSWORD:-idea123}
+        VNC_DISPLAY: 2
     container_name: idea-user2
     hostname: idea-user2
     ports:
-      - "${VNC_PORT_USER2:-5902}:5901"
+      - "${VNC_PORT_USER2:-5902}:5902"
     expose:
       - "6080"
     volumes:
