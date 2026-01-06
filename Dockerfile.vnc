@@ -3,7 +3,8 @@
 # Supports IDEA 2024 and later versions
 #
 
-FROM ubuntu:22.04
+ARG UBUNTU_IMAGE=ubuntu:22.04
+FROM ${UBUNTU_IMAGE}
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV TZ=Asia/Shanghai
@@ -297,6 +298,10 @@ fi\n\
 USER_HOME=/home/developer\n\
 export HOME=${USER_HOME}\n\
 export USER=developer\n\
+\
+# Ensure mounted volumes are writable by developer\n\
+mkdir -p ${USER_HOME}/.config ${USER_HOME}/.cache ${USER_HOME}/.local ${USER_HOME}/projects ${USER_HOME}/.vnc\n\
+chown -R developer:developer ${USER_HOME}/.config ${USER_HOME}/.cache ${USER_HOME}/.local ${USER_HOME}/projects ${USER_HOME}/.vnc 2>/dev/null || true\n\
 \
 # Clean up old VNC locks\n\
 rm -rf /tmp/.X* /tmp/.x* ${USER_HOME}/.vnc/*.pid ${USER_HOME}/.vnc/*.log 2>/dev/null || true\n\

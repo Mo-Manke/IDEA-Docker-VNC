@@ -25,10 +25,13 @@ services:
       context: .
       dockerfile: Dockerfile.vnc
       args:
+        UBUNTU_IMAGE: ${UBUNTU_IMAGE:-ubuntu:22.04}
         IDE_DOWNLOAD_URL: ${IDE_DOWNLOAD_URL:-https://download.jetbrains.com/idea/ideaIU-2024.3.1.1.tar.gz}
         VNC_PASSWORD: ${VNC_PASSWORD:-idea123}
     container_name: idea-user1
     hostname: idea-user1
+    ports:
+      - "5901:5901"
     cap_add:
       - MAC_ADMIN
       - SYS_ADMIN
@@ -53,10 +56,13 @@ services:
       context: .
       dockerfile: Dockerfile.vnc
       args:
+        UBUNTU_IMAGE: ${UBUNTU_IMAGE:-ubuntu:22.04}
         IDE_DOWNLOAD_URL: ${IDE_DOWNLOAD_URL:-https://download.jetbrains.com/idea/ideaIU-2024.3.1.1.tar.gz}
         VNC_PASSWORD: ${VNC_PASSWORD:-idea123}
     container_name: idea-user2
     hostname: idea-user2
+    ports:
+      - "5902:5901"
     cap_add:
       - MAC_ADMIN
       - SYS_ADMIN
@@ -77,9 +83,16 @@ services:
 
 volumes:
   shared-projects:
+    name: idea-docker-vnc_shared-projects
   idea-config-user1:
+    name: idea-docker-vnc_idea-config-user1
   idea-cache-user1:
+    name: idea-docker-vnc_idea-cache-user1
   idea-local-user1:
+    name: idea-docker-vnc_idea-local-user1
   idea-config-user2:
+    name: idea-docker-vnc_idea-config-user2
   idea-cache-user2:
+    name: idea-docker-vnc_idea-cache-user2
   idea-local-user2:
+    name: idea-docker-vnc_idea-local-user2
